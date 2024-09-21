@@ -1,5 +1,5 @@
 import { Text, View, Button } from "react-native";
-import { test } from "./schoology/test";
+import { promptAuthorization } from "./schoology/test";
 
 export default function Index() {
   return (
@@ -10,9 +10,7 @@ export default function Index() {
         alignItems: "center",
       }}
     >
-      <Button title="Button"
-      onPress={test}
-      />
+      <Button title="Authorize" onPress={promptAuthorization}/>
     </View>
   );
 }
