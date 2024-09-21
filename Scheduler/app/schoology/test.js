@@ -1,5 +1,8 @@
 import axios from 'axios';
-import { Linking } from 'react-native';
+import { getRandomValues } from 'react-native-get-random-values';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+
 
 const Key = 'efe5a543948026772946115c316323cd05e443b00';
 const Secret = 'e9dc645bf33230645546a37fc9d80348';
@@ -26,12 +29,19 @@ async function getRequestToken(Key, Secret) {
 }
 
 export async function promptAuthorization() {
-  const requestToken = await getRequestToken(Key, Secret);
-  console.log("oauth_token: " + requestToken.oauth_token);
-  console.log("oauth_token: " + requestToken.oauth_token_secret);
-  if (requestToken) {
-    const url = `https://lms.lausd.net/oauth/authorize?oauth_consumer_key=${Key}&oauth_token=${requestToken.oauth_token}&oauth_token_secret=${requestToken.oauth_token_secret}`;
-    console.log(url);
-    //Linking.openURL(url);
+  try {
+    const requestToken = await getRequestToken(Key, Secret);
+    console.log("oauth_token: " + requestToken.oauth_token);
+    console.log("oauth_token: " + requestToken.oauth_token_secret);
+
+    if (requestToken) {
+      const redirectURI = encodeURIComponent(Linking.createURL('/'));
+      const url = `https://lms.lausd.net/oauth/authorize?oauth_consumer_key=${Key}&oauth_token=${requestToken.oauth_token}&oauth_token_secret=${requestToken.oauth_token_secret}&oauth_callback=${redirectURI}`;
+      console.log(url);
+      const result = await WebBrowser.openAuthSessionAsync(url);
+      console.log('InAppBrowser result:', result);
+    }
+  } catch (error) {
+    console.error('Error during authorization:', error);
   }
 }
