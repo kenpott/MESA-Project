@@ -7,17 +7,12 @@ import * as Crypto from 'expo-crypto';
 const Key = 'efe5a543948026772946115c316323cd05e443b00';
 const Secret = 'e9dc645bf33230645546a37fc9d80348';
 
-function generateNonceAndTimestamp() {
-  const array = new Uint8Array(8);
-  Crypto.getRandomValues(array);
-  const oauthNonce = Array.from(array).map(byte => byte.toString(16).padStart(2, '0')).join('');
-  const oauthTimestamp  = Math.floor(Date.now() / 1000);
-  return { oauthNonce, oauthTimestamp };
-}
-
-
 async function getRequestToken(Key, Secret) {
-  const { oauthNonce, oauthTimestamp } = generateNonceAndTimestamp();
+  const oauthTimestamp = Math.floor(Date.now() / 1000);
+  const array = new Uint8Array(8); 
+  crypto.getRandomValues(array); 
+  const oauthNonce = Array.from(array).map(byte => byte.toString(16).padStart(2, '0')).join(''); 
+   
   const URL = `https://api.schoology.com/v1/oauth/request_token?oauth_consumer_key=${Key}&oauth_timestamp=${oauthTimestamp}&oauth_signature_method=PLAINTEXT&oauth_version=1.0&oauth_nonce=${oauthNonce}&oauth_signature=${encodeURIComponent(Secret + '%26')}`;
 
   try {
@@ -44,7 +39,10 @@ export async function promptAuthorization() {
       console.log(url);
       const result = await WebBrowser.openAuthSessionAsync(url);
       if (result.type == "cancel") {
-        const { oauthNonce, oauthTimestamp } = generateNonceAndTimestamp();
+        const array = new Uint8Array(8); 
+        crypto.getRandomValues(array); 
+        const oauthNonce = Array.from(array).map(byte => byte.toString(16).padStart(2, '0')).join(''); 
+        const oauthTimestamp = Math.floor(Date.now() / 1000);
 
         const studentUrl = `https://api.schoology.com/v1/courses/7354453829/assignments?oauth_consumer_key=${Key}&oauth_token=${requestToken.oauth_token}&oauth_signature_method=PLAINTEXT&oauth_version=1.0&oauth_nonce=${oauthNonce}&oauth_timestamp=${oauthTimestamp}&oauth_signature=${Secret}&${requestToken.oauth_token_secret}`;
         console.log(studentUrl);
