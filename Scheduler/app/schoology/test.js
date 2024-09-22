@@ -2,6 +2,7 @@ import axios from 'axios';
 import { getRandomValues } from 'react-native-get-random-values';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import * as AuthSession from 'expo-auth-session';
 
 
 const Key = 'efe5a543948026772946115c316323cd05e443b00';
@@ -35,10 +36,13 @@ export async function promptAuthorization() {
     console.log("oauth_token: " + requestToken.oauth_token_secret);
 
     if (requestToken) {
-      const redirectURI = encodeURIComponent(Linking.createURL('/'));
-      const url = `https://lms.lausd.net/oauth/authorize?oauth_consumer_key=${Key}&oauth_token=${requestToken.oauth_token}&oauth_token_secret=${requestToken.oauth_token_secret}&oauth_callback=${redirectURI}`;
+      const redirectURI = AuthSession.makeRedirectUri({
+        useProxy: true,
+      });
+      console.log(`redirectURI: ${redirectURI}`);
+      const url = `https://lms.lausd.net/oauth/authorize?oauth_consumer_key=${Key}&oauth_token=${requestToken.oauth_token}&oauth_token_secret=${requestToken.oauth_token_secret}`;
       console.log(url);
-      const result = await WebBrowser.openAuthSessionAsync(url);
+      const result = await WebBrowser.openAuthSessionAsync(url, redirectURI);
       console.log('InAppBrowser result:', result);
     }
   } catch (error) {
