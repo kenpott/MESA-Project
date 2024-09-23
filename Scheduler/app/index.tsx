@@ -1,5 +1,5 @@
 import { View, Button } from "react-native";
-import { promptAuthorization } from "./schoology/test.js";
+import { promptAuthorization } from "./schoology/test";
 
 export default function Index() {
   return (
