@@ -41,9 +41,11 @@ export async function promptAuthorization() {
       const oauthNonce = Array.from(array).map(byte => byte.toString(16).padStart(2, '0')).join(''); 
       const oauthTimestamp = Math.floor(Date.now() / 1000);
 
-      const studentUrl = `${baseUrl}courses/7354453829/assignments?oauth_consumer_key=${Key}&oauth_token=${requestToken.oauth_token}&oauth_signature_method=PLAINTEXT&oauth_version=1.0&oauth_nonce=${oauthNonce}&oauth_timestamp=${oauthTimestamp}&oauth_signature=${Secret}&${requestToken.oauth_token_secret}`;
+      // The oauth_token isn't the requesttoke.oauth_token
+      const oauthSignature = `${Secret}%26`;
+      const studentUrl = `${baseUrl}user/66574423?oauth_consumer_key=${Key}&oauth_nonce=${oauthNonce}&oauth_signature=${encodeURIComponent(oauthSignature)}&oauth_signature_method=PLAINTEXT&oauth_timestamp=${oauthTimestamp}&oauth_version=1.0`;
       console.log("StudentUrl: " + studentUrl);
-      const studentResult = await axios.get(studentUrl);
+      // const studentResult = await axios.get(studentUrl);
       console.log(studentResult.data);
     }
   }
