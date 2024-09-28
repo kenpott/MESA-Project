@@ -11,7 +11,8 @@
     "dependencies": {
         "@types/react": "~18.2.14",
         "axios": "^1.7.7",
-        "expo": "^51.0.32",
+        "expo": "^51.0.34",
+        "expo-crypto": "^13.0.2",
         "expo-router": "^3.5.23",
         "expo-web-browser": "^13.0.3",
         "mime-db": "^1.53.0",

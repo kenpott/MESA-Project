@@ -8,45 +8,30 @@ const Secret = 'e9dc645bf33230645546a37fc9d80348';
 const baseUrl = 'https://api.schoology.com/v1/';
 const domain = 'https://lms.lausd.net/';
 
-async function getRequestToken(Key, Secret) {
-  const oauthTimestamp = Math.floor(Date.now() / 1000);
+export async function promptAuthorization() {
   const array = new Uint8Array(8); 
   crypto.getRandomValues(array); 
   const oauthNonce = Array.from(array).map(byte => byte.toString(16).padStart(2, '0')).join(''); 
-
-  const URL = `${baseUrl}oauth/request_token?oauth_consumer_key=${Key}&oauth_timestamp=${oauthTimestamp}&oauth_signature_method=PLAINTEXT&oauth_version=1.0&oauth_nonce=${oauthNonce}&oauth_signature=${Secret}%26`;
-
+  const URL = `${baseUrl}oauth/request_token?oauth_consumer_key=${Key}&oauth_timestamp=${Math.floor(Date.now() / 1000)}&oauth_signature_method=PLAINTEXT&oauth_version=1.0&oauth_nonce=${oauthNonce}&oauth_signature=${Secret}%26`;
   const response = await axios.get(URL);
-  console.log("request_token: " + response.data);
-  const params = new URLSearchParams(response.data);
-  return {
-    oauth_token: params.get('oauth_token'),
-    oauth_token_secret: params.get('oauth_token_secret')
-  };
-}
+  let data = response.data.match(/oauth_token=([^&]+)&oauth_token_secret=([^&]+)&xoauth_token_ttl=(\d+)/);
+  const Token = data[1];
+  const TokenSecret = data[2];
+  console.log(`Token: ${Token}`);
+  console.log(`Token Secret: ${TokenSecret}`);
 
-export async function promptAuthorization() {
-  const requestToken = await getRequestToken(Key, Secret);
-  console.log("oauth_token: " + requestToken.oauth_token);
-  console.log("oauth_token_secret: " + requestToken.oauth_token_secret);
-
-  if (requestToken) {
-    const url = `${domain}oauth/authorize?oauth_consumer_key=${Key}&oauth_token=${requestToken.oauth_token}&oauth_token_secret=${requestToken.oauth_token_secret}`;
-    console.log(url);
-    const result = await WebBrowser.openAuthSessionAsync(url);
-    
-    if (result.type === "cancel") {
-      const array = new Uint8Array(8); 
-      crypto.getRandomValues(array); 
-      const oauthNonce = Array.from(array).map(byte => byte.toString(16).padStart(2, '0')).join(''); 
-      const oauthTimestamp = Math.floor(Date.now() / 1000);
-
-      // The oauth_token isn't the requesttoke.oauth_token
-      const oauthSignature = `${Secret}%26`;
-      const studentUrl = `${baseUrl}user/66574423?oauth_consumer_key=${Key}&oauth_nonce=${oauthNonce}&oauth_signature=${encodeURIComponent(oauthSignature)}&oauth_signature_method=PLAINTEXT&oauth_timestamp=${oauthTimestamp}&oauth_version=1.0`;
-      console.log("StudentUrl: " + studentUrl);
-      // const studentResult = await axios.get(studentUrl);
-      console.log(studentResult.data);
-    }
+  const url = `${domain}oauth/authorize?oauth_consumer_key=${Key}&oauth_token=${Token}&oauth_token_secret=${TokenSecret}`;
+  console.log(`Authorization Url: ${url}`);
+  
+  const result = await WebBrowser.openAuthSessionAsync(url);
+  if (result.type === "cancel") {
+    const studentUrl = `${baseUrl}sections/7354453829/assignments?oauth_consumer_key=${Key}&oauth_nonce=${oauthNonce}&oauth_signature=${Secret}%26&oauth_signature_method=PLAINTEXT&oauth_timestamp=${Math.floor(Date.now() / 1000)}&oauth_version=1.0`;
+    console.log("Student Url: " + studentUrl);
+    /*
+    const studentResult = await axios.get(studentUrl).then((response) => {
+      console.log(response.data);
+    });
+    */
   }
 }
+
