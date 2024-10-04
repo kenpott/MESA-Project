@@ -12,7 +12,9 @@ export default function Tab() {
         <Text className="text-lg font-semibold text-neutral-500">Hello!</Text>
         <Text className='text-2xl font-bold text-white'>Username</Text>
       </View>
-
+      <View className='pl-7'>
+        <Text className="text-lg font-bold text-white">May 11, 2024</Text>
+      </View>
       <View className='container p-2 flex-row items-center justify-center'>
         {circularButtons.map((button, index) => (
           <View
@@ -48,8 +50,11 @@ export default function Tab() {
               <Text className='text-white text-sm font-bold'>{assignment.title}</Text>
               <Text className='text-neutral-500 text-xs font-bold'>{assignment.class}</Text>
             </View>
-            <View className='flex-2 mr-5 bg-green-500 rounded-full px-2 py-1'>
+            <View className='flex-2 mr-3 bg-green-500 rounded-full px-2 py-1'>
           <Text className='text-xs text-white font-semibold'>Completed</Text>
+        </View>
+        <View className='flex-2 mr-3 bg-red-500 rounded-full px-1 py-1'>
+          <Text className='text-xs text-white font-semibold'>Overdue</Text>
         </View>
             <View className='flex-3'>
               <Text className='text-white text-sm font-bold text-center'>Due</Text>
