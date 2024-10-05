@@ -53,7 +53,7 @@ export default function Tab() {
       <View className='bg-neutral-900 m-4 p-1 rounded-3xl'>
       {circularButtons.map((button, index) => (
       <View
-        key={index}
+        key={index + 4}
         className={`p-2 m-1 flex-row items-center justify-between rounded-xl`}
       >
         <Text className='text-lg font-bold text-white'>#{index + 1}</Text>
