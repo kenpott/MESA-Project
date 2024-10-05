@@ -33,7 +33,7 @@ export default function Tab() {
       </View>
       <View className='flex-row m-2'>
         <Pressable className='p-2 bg-purple-700 rounded-full text-center mr-2'>
-          <Text className='text-neutral-950 text-xs font-bold'>Upcoming</Text>
+          <Text className='text-white text-xs font-bold'>Upcoming</Text>
         </Pressable>
         <Pressable className='p-2 rounded-full text-center'>
           <Text className='text-neutral-500 text-xs font-bold'>Overdue</Text>
