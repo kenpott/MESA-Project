@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { View, ScrollView, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Tab() {
   const circularButtons = Array(7).fill({ letter: 'M', number: '1' });
-  const assignments = Array(6).fill({ title: 'Assignment', class: 'Class', due: '1/12 11:59pm' });
+  const assignments = Array(20).fill({ title: 'Assignment', class: 'Class', due: '1/12 11:59pm' });
 
   return (
     <SafeAreaView className='flex-1 bg-neutral-950'>
-      <View className="container m-4">
+      <View className="container m-2">
         <Text className="text-lg font-semibold text-neutral-500">Hello!</Text>
         <Text className='text-2xl font-bold text-white'>Username</Text>
       </View>
@@ -43,7 +42,7 @@ export default function Tab() {
         </Pressable>
       </View>
 
-      <View className='container p-4'>
+      <ScrollView className='container p-4'>
         {assignments.map((assignment, index) => (
           <Pressable key={index} className='flex-row justify-between items-start mb-4'>
             <View className='flex-1'>
@@ -62,7 +61,7 @@ export default function Tab() {
             </View>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
