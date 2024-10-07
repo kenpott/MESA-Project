@@ -6,7 +6,16 @@ export default function Tab() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'overdue' | 'completed'>('upcoming');
   const [hoveredTab, setHoveredTab] = useState<'upcoming' | 'overdue' | 'completed' | null>(null);
 
-  const circularButtons = Array(7).fill({ letter: 'M', number: '1' });
+  const daysOfWeek = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const currentDayIndex = (new Date().getDay() + 6) % 7;
+  const today = new Date();
+
+  const getDayNumber = (offset : number) => {
+    const newDate = new Date(today);
+    newDate.setDate(today.getDate() + offset);
+    return newDate.getDate();
+  };
+
   const assignments = Array(20).fill({ title: 'Assignment', class: 'Class', due: '1/12 11:59pm' });
 
   return (
@@ -16,31 +25,39 @@ export default function Tab() {
         <Text className='text-2xl font-bold text-white'>Username</Text>
       </View>
       <View className='pl-7'>
-        <Text className="text-lg font-bold text-neutral-500">May 11, 2024</Text>
+        <Text className="text-2xl font-bold text-white">
+          {today.toLocaleString('en-us', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </Text>
       </View>
+
       <View className='container p-2 flex-row items-center justify-center'>
-        {circularButtons.map((button, index) => (
-          <View
-            key={index}
-            className={`p-2 m-1 w-10 flex-col items-center rounded-xl text-center ${
-              index === 0 ? 'bg-purple-700' : 'bg-neutral-500'
-            }`}
-          >
-            <Text className='text-lg font-bold text-white'>{button.letter}</Text>
-            <Text className='text-md font-bold text-white'>{button.number}</Text>
-          </View>
-        ))}
+        {daysOfWeek.map((day, index) => {
+          const dayNumber = getDayNumber(index - currentDayIndex);
+
+          return (
+            <View
+              key={index}
+              className={`p-2 m-1 w-10 flex-col items-center rounded-xl text-center ${
+                index === currentDayIndex ? 'bg-purple-700' : 'bg-neutral-500'
+              }`}
+            >
+              <Text className='text-lg font-bold text-white'>{day}</Text>
+              <Text className='text-md font-bold text-white'>{dayNumber}</Text>
+            </View>
+          );
+        })}
       </View>
+
       <View className='container m-2'>
         <Text className='text-4xl font-bold text-white'>Dashboard</Text>
       </View>
       <View className='flex-row m-3 pb-2'>
-        <Pressable 
+        <Pressable
           onPress={() => setActiveTab('upcoming')}
           onPressIn={() => setHoveredTab('upcoming')}
           onPressOut={() => setHoveredTab(null)}
           className={`p-2 rounded-full text-center mr-2 ${
-            activeTab === 'upcoming' ? 'bg-purple-700' : (hoveredTab === 'upcoming' ? 'bg-neutral-900' : 'bg-neutral-950')
+            activeTab === 'upcoming' ? 'bg-purple-700' : hoveredTab === 'upcoming' ? 'bg-neutral-900' : 'bg-neutral-950'
           }`}
         >
           <Text className={`text-xs font-bold ${activeTab === 'upcoming' ? 'text-white' : 'text-neutral-500'}`}>
@@ -48,12 +65,12 @@ export default function Tab() {
           </Text>
         </Pressable>
 
-        <Pressable 
+        <Pressable
           onPress={() => setActiveTab('overdue')}
           onPressIn={() => setHoveredTab('overdue')}
           onPressOut={() => setHoveredTab(null)}
           className={`p-2 rounded-full text-center mr-2 ${
-            activeTab === 'overdue' ? 'bg-purple-700' : (hoveredTab === 'overdue' ? 'bg-neutral-900' : 'bg-neutral-950')
+            activeTab === 'overdue' ? 'bg-purple-700' : hoveredTab === 'overdue' ? 'bg-neutral-900' : 'bg-neutral-950'
           }`}
         >
           <Text className={`text-xs font-bold ${activeTab === 'overdue' ? 'text-white' : 'text-neutral-500'}`}>
@@ -61,12 +78,12 @@ export default function Tab() {
           </Text>
         </Pressable>
 
-        <Pressable 
+        <Pressable
           onPress={() => setActiveTab('completed')}
           onPressIn={() => setHoveredTab('completed')}
           onPressOut={() => setHoveredTab(null)}
           className={`p-2 rounded-full text-center mr-2 ${
-            activeTab === 'completed' ? 'bg-purple-700' : (hoveredTab === 'completed' ? 'bg-neutral-900' : 'bg-neutral-950')
+            activeTab === 'completed' ? 'bg-purple-700' : hoveredTab === 'completed' ? 'bg-neutral-900' : 'bg-neutral-950'
           }`}
         >
           <Text className={`text-xs font-bold ${activeTab === 'completed' ? 'text-white' : 'text-neutral-500'}`}>
