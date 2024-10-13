@@ -2,6 +2,8 @@ import { View, Text, Pressable, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
+import { login } from './services/login.js';
+
 
 export default function Tab() {
     const [hovered, setHovered] = useState(false);
@@ -18,7 +20,7 @@ export default function Tab() {
                 className={`p-4 rounded-lg flex-row items-center justify-center mx-10 mb-20 ${
                     hovered ? 'bg-purple-800' : 'bg-purple-700'
                 }`}
-                onPress={() => router.push('/dashboard')} 
+                onPress={() => {login(); router.push('/dashboard')}} 
                 onPressIn={() => setHovered(true)} 
                 onPressOut={() => setHovered(false)} 
             >
