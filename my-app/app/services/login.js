@@ -1,8 +1,13 @@
-import * as WebBrowser from 'expo-web-browser';
+import axios from 'axios';
 
 async function login() {
-    const result = await WebBrowser.openBrowserAsync("https://lms.lausd.net");
-    return result;
+    const { name, value } = await axios.post('http://localhost:8080/login', {
+        email: 'ksalas0022@mymail.lausd.net',
+        password: 'Thisismynewpassword',
+    }).data;
+
+    console.log(name, value);
+    return {name, value};
 }
 
 export {
