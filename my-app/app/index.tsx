@@ -6,7 +6,7 @@ import { login } from './services/login.js';
 
 export default function Tab() {
     const [hovered, setHovered] = useState(false);
-    const [submitHovered, setSubmitHovered] = useState(false); // New state for submit button hover
+    const [submitHovered, setSubmitHovered] = useState(false);
     const [isLoginFormVisible, setLoginFormVisible] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

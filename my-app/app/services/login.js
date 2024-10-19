@@ -6,7 +6,6 @@ async function login(email, password) {
         password: password,
     });
     const {name, value} = result.data
-
     console.log(name, value);
     return {name, value};
 }
