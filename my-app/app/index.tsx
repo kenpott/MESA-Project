@@ -13,7 +13,7 @@ export default function Tab() {
     const router = useRouter();
 
     const handleLogin = () => {
-        login(email, password);
+        // login(email, password);
         router.push('/dashboard');
     };
 
@@ -53,8 +53,8 @@ export default function Tab() {
                                 submitHovered ? 'bg-purple-800' : 'bg-purple-700'
                             }`}
                             onPress={handleLogin}
-                            onPressIn={() => setSubmitHovered(true)}  // Handle hover effect
-                            onPressOut={() => setSubmitHovered(false)} // Reset hover effect
+                            onPressIn={() => setSubmitHovered(true)} 
+                            onPressOut={() => setSubmitHovered(false)}
                         >
                             <Text className="text-neutral-900 text-lg font-bold px-3">Submit</Text>
                         </Pressable>
