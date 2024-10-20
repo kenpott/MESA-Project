@@ -1,84 +1,15 @@
+import * as SecureStore from 'expo-secure-store';
 import { View, ScrollView, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import * as cheerio from 'cheerio';
 
 interface Assignment {
   title: string;
   dueDate: string; 
   courseTitle: string;
 }
-
-interface Cookie {
-  name: string;
-  value: string;
-}
-
-const fetchOverdueAssignments = async (cookie: Cookie): Promise<{ [key: string]: Assignment }> => {
-  const overdueAssignments: { [key: string]: Assignment } = {}; 
-  const overdueReq = await axios.get('https://lms.lausd.net/home/overdue_submissions_ajax', {
-    headers: {
-      "Cookie": `${cookie.name}=${cookie.value}`
-    }
-  });
-
-  const $ = cheerio.load(overdueReq.data.html);
-
-  $('.upcoming-event').each((index: number, element) => {
-    const id = $(element).find('.event-title a').attr('href')?.split('/').pop()?.trim();
-    const title = $(element).find('.event-title a').text().trim();
-    const overdueDaysText = $(element).find('.readonly-title.event-subtitle').first().text().trim();
-    const overdueDays = overdueDaysText.match(/\d+/)?.[0] || '0';
-    const courseTitle = $(element).find('.readonly-title.event-subtitle').last().text().trim();
-    const dueDateAlt = $(element).find('.infotip.submission-infotip img').attr('alt');
-    const dueDate = dueDateAlt ? dueDateAlt.match(/(?:\w+, )?(\w+ \d{1,2}, \d{4})/)?.[1] || '' : '';
-
-    if (id) {
-      overdueAssignments[id] = {
-        title,
-        courseTitle,
-        dueDate
-      };
-    } else {
-      console.log("No ID found for element:", { title, overdueDays, courseTitle, dueDate });
-    }
-  });
-
-  return overdueAssignments; 
-};
-
-const fetchUpcomingAssignments = async (cookie: Cookie): Promise<{ [key: string]: Assignment }> => {
-  const upcomingAssignments: { [key: string]: Assignment } = {};
-  const upcomingReq = await axios.get('https://lms.lausd.net/home/upcoming_submissions_ajax', {
-    headers: {
-      "Cookie": `${cookie.name}=${cookie.value}`
-    }
-  });
-
-  const upcoming$ = cheerio.load(upcomingReq.data.html);
-
-  upcoming$('.upcoming-event').each((index: number, element) => {
-    const id = upcoming$(element).find('.event-title a').attr('href')?.split('/').pop()?.trim();
-    const title = upcoming$(element).find('.event-title a').text().trim();
-    const dueDateText = upcoming$(element).find('.readonly-title.event-subtitle').first().text().trim();
-    const dueDate = dueDateText ? dueDateText.match(/(?:\w+, )?(\w+ \d{1,2}, \d{4})/)?.[1] || '' : '';
-    const courseTitle = upcoming$(element).find('.readonly-title.event-subtitle').last().text().trim();
-
-    if (id) {
-      upcomingAssignments[id] = {
-        title,
-        courseTitle,
-        dueDate,
-      };
-    } else {
-      console.log("No ID found for upcoming assignment:", { title, dueDate, courseTitle });
-    }
-  });
-
-  return upcomingAssignments; 
-};
 
 export default function Tab() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'overdue'>('upcoming');
@@ -110,17 +41,27 @@ export default function Tab() {
     const month = monthNames[monthStr];
     const day = parseInt(dayStr, 10); 
     return `${month}/${day}`;
-  }
-
+}
   useEffect(() => {
-    const cookie: Cookie = { name: 'SESSb9665c0d9ab149f2bb38695f558551ea', value: '302bf307c6b6844788c3fb2da1f3a25d' };
-
     async function fetchAssignments() {
       try {
-        const overdue = await fetchOverdueAssignments(cookie);
-        const upcoming = await fetchUpcomingAssignments(cookie);
-        setOverdueAssignments(Object.values(overdue));
-        setUpcomingAssignments(Object.values(upcoming));
+        const upcomingReq = await axios.get('https://lms.lausd.net/home/upcoming_submissions_ajax', {
+          headers: {
+            "Cookie": await SecureStore.getItemAsync('cookie')
+          }
+      });
+      const overdueReq = await axios.get('https://lms.lausd.net/home/overdue_submissions_ajax', {
+        headers: {
+          "Cookie": await SecureStore.getItemAsync('cookie')
+        }
+    });
+        const overdueAssignments = overdueReq.data; // returns html
+        const upcomingAssignments = upcomingReq.data // returns html
+
+// to-do - parse the html
+
+        setOverdueAssignments(Object.values(overdueAssignments));
+        setUpcomingAssignments(Object.values(upcomingAssignments));
       } catch (error) {
         console.error('Error fetching assignments:', error);
       }
