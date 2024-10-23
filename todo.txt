@@ -1,8 +1,9 @@
-so dumb native react doesnt use the node standard library so 
-i cant use cheerio so im planning on making an api request 
-/parse so i can use cheerio and i will send the html so that 
-i can ensure safety by not sending their cookie through a 
-api request and only the html.
--- DONE --
-
+-- TO-DO --
 So schoology is dumb umm the overdue get req returns all assignments including those that arent overdue noice.
+dropdown menu for all assignments
+
+-- Iterations --
+changed from directly sending cookie to login and parse html to storing their cookie on securestore and sending only the html to parse
+changed from using the api to login in into cookie login
+remove the week bar due to redundency (Design)
+added a dropdown menu for all assignments for more info (QOL) -- WIP
