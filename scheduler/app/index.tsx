@@ -10,19 +10,20 @@ export default function Tab() {
     const [isLoginFormVisible, setLoginFormVisible] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const router = useRouter();
+    const router = useRouter(); // Use useRouter instead of useNavigation
 
     const handleLogin = () => {
-        // login(email, password);
-        router.push('/dashboard');
+
+        login(email, password);
+        router.push('/dashboard'); // Use push for navigation
     };
 
     return (
         <KeyboardAvoidingView
             className="flex-1"
-            behavior='padding'>
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <SafeAreaView className="bg-neutral-950 flex-1 justify-between">
-                <View className='flex-1'/>
+                <View className='flex-1' />
                 <View className='pb-10 items-center'>
                     <Text className="text-white text-3xl font-bold text-center px-4 mx-4 mb-2">
                         Welcome to Scheduler<Text className='text-purple-700'>++</Text>
@@ -56,7 +57,7 @@ export default function Tab() {
                             onPressIn={() => setSubmitHovered(true)} 
                             onPressOut={() => setSubmitHovered(false)}
                         >
-                            <Text className="text-neutral-900 text-lg font-bold px-3">Login in</Text>
+                            <Text className="text-neutral-900 text-lg font-bold px-3">Login</Text>
                         </Pressable>
                     </View>
                 ) : (
@@ -68,7 +69,7 @@ export default function Tab() {
                         onPressIn={() => setHovered(true)} 
                         onPressOut={() => setHovered(false)} 
                     >
-                        <Image source={require('../assets/images/schoology-logo.png')} className='w-10 h-10'/>
+                        <Image source={require('../assets/images/schoology-logo.png')} className='w-10 h-10' />
                         <Text className="text-neutral-900 text-lg font-bold px-3">Login with Schoology</Text>
                     </Pressable>
                 )}

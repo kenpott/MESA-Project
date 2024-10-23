@@ -3,7 +3,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import * as cheerio from 'cheerio';
 
 interface Assignment {
   title: string;

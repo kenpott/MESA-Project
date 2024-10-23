@@ -1,0 +1,8 @@
+so dumb native react doesnt use the node standard library so 
+i cant use cheerio so im planning on making an api request 
+/parse so i can use cheerio and i will send the html so that 
+i can ensure safety by not sending their cookie through a 
+api request and only the html.
+-- DONE --
+
+So schoology is dumb umm the overdue get req returns all assignments including those that arent overdue noice.

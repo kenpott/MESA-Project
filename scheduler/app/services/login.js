@@ -11,13 +11,8 @@ async function login(email, password) {
     const existingCookie = await SecureStore.getItemAsync('cookie');
     
     if (existingCookie) {
-        console.log('Cookie already exists:', existingCookie);
-        console.log('Skipping cookie replacement.');
-    } else {
         await SecureStore.setItemAsync('cookie', `${name}=${value}`);
-        console.log('New cookie set:', `${name}=${value}`);
     }
-
     return { name, value };
 }
 

@@ -1,6 +1,6 @@
 import { View, ScrollView, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react'; 
+import React, {useState} from 'react';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 export default function Tab() {
