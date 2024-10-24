@@ -24,6 +24,12 @@ export default function Tab() {
 
   const today = new Date();
 
+  // Function to format due date
+  const formatDueDate = (duedate: string) => {
+    const [month, day] = duedate.split('/'); // Assuming duedate is in MM/DD/YYYY format
+    return `${month}/${day}`;
+  };
+
   return (
     <SafeAreaView className='flex-1 bg-neutral-950 p-0' edges={['top', 'left', 'right']}>
       <View className="p-4">
@@ -64,7 +70,15 @@ export default function Tab() {
 
       <ScrollView className='bg-neutral-900 mx-2 p-4'>
         {(activeTab === 'upcoming' ? Object.values(assignments.upcoming) : Object.values(assignments.overdue)).map((assignment, index) => (
-          <AssignmentItem key={index} assignment={{ title: assignment.title, class: assignment.class, due: assignment.duedate, overdue: assignment.overdue }} />
+          <AssignmentItem 
+            key={index} 
+            assignment={{
+              title: assignment.title,
+              class: assignment.class,
+              due: formatDueDate(assignment.duedate), // Format the due date
+              overdue: assignment.overdue
+            }} 
+          />
         ))}
       </ScrollView>
     </SafeAreaView>
