@@ -14,8 +14,9 @@ export default function Tab() {
 
     const handleLogin = async () => {
 
+        console.log('Pressed');
         await login(email, password);
-        router.push('/dashboard'); // Use push for navigation
+        router.push('/dashboard');
     };
 
     return (

@@ -22,7 +22,7 @@ interface AssignmentsData {
 export async function fetchAllAssignments(): Promise<AssignmentsData> {
   const cookie = await getCookie();
 
-  const response = await axios.post('http://192.168.1.95:8000/getAssignments', { "cookie": cookie });
+  const response = await axios.post('http://192.168.1.53:8000/getAssignments', { "cookie": cookie });
 
   return response.data;
 }
