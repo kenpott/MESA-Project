@@ -1,34 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { fetchAssignments } from '../services/fetchassignments'; 
+import { fetchAllAssignments } from '../services/fetchassignments';
 import AssignmentItem from '../../components/assignment';
+
+interface Assignment {
+  title: string;
+  description: string;
+  class: string;
+  type: string;
+  duedate: number; 
+  overdue: number;
+  files?: string[];
+  images?: string[];
+}
+
+interface AssignmentsState {
+  upcoming: Record<string, Assignment>;
+  overdue: Record<string, Assignment>;
+}
 
 export default function Tab() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'overdue'>('upcoming');
   const [hoveredTab, setHoveredTab] = useState<'upcoming' | 'overdue' | null>(null);
-  const [assignments, setAssignments] = useState<{ upcoming: Record<string, any>; overdue: Record<string, any> }>({ upcoming: {}, overdue: {} });
+  const [assignments, setAssignments] = useState<AssignmentsState>({ upcoming: {}, overdue: {} });
 
   useEffect(() => {
     const loadAssignments = async () => {
+      const startTime = performance.now(); // Start time measurement
+
       try {
-        const fetchedAssignments = await fetchAssignments();
-        setAssignments(fetchedAssignments);
+        const fetchedAssignments = await fetchAllAssignments();
+        console.log('Fetched assignments:', fetchedAssignments);
+        setAssignments(fetchedAssignments || { upcoming: {}, overdue: {} });
       } catch (error) {
         console.error('Error fetching assignments:', error);
       }
+
+      const endTime = performance.now(); // End time measurement
+      const duration = ( endTime - startTime ) / 1000; // Calculate the duration
+      console.log(`Time taken to fetch and parse assignments: ${duration} seconds`);
     };
 
     loadAssignments();
   }, []);
 
   const today = new Date();
-
-  // Function to format due date
-  const formatDueDate = (duedate: string) => {
-    const [month, day] = duedate.split('/'); // Assuming duedate is in MM/DD/YYYY format
-    return `${month}/${day}`;
-  };
 
   return (
     <SafeAreaView className='flex-1 bg-neutral-950 p-0' edges={['top', 'left', 'right']}>
@@ -69,17 +86,45 @@ export default function Tab() {
       </View>
 
       <ScrollView className='bg-neutral-900 mx-2 p-4'>
-        {(activeTab === 'upcoming' ? Object.values(assignments.upcoming) : Object.values(assignments.overdue)).map((assignment, index) => (
-          <AssignmentItem 
-            key={index} 
-            assignment={{
-              title: assignment.title,
-              class: assignment.class,
-              due: formatDueDate(assignment.duedate), // Format the due date
-              overdue: assignment.overdue
-            }} 
-          />
-        ))}
+        {activeTab === 'upcoming' ? (
+          assignments.upcoming && Object.keys(assignments.upcoming).length > 0 ? (
+            Object.entries(assignments.upcoming).map(([id, assignment]) => (
+              <AssignmentItem
+                key={id}
+                assignment={{
+                  title: assignment.title,
+                  class: assignment.class,
+                  type: assignment.type,
+                  duedate: assignment.duedate,
+                  overdue: assignment.overdue,
+                  description: assignment.description,
+                  files: assignment.files || []
+                }}
+              />
+            ))
+          ) : (
+            <Text className='text-white'>No upcoming assignments available.</Text>
+          )
+        ) : (
+          assignments.overdue && Object.keys(assignments.overdue).length > 0 ? (
+            Object.entries(assignments.overdue).map(([id, assignment]) => (
+              <AssignmentItem
+                key={id}
+                assignment={{
+                  title: assignment.title,
+                  class: assignment.class,
+                  type: assignment.type,
+                  duedate: assignment.duedate,
+                  overdue: assignment.overdue,
+                  description: assignment.description,
+                  files: assignment.files || []
+                }}
+              />
+            ))
+          ) : (
+            <Text className='text-white'>No overdue assignments available.</Text>
+          )
+        )}
       </ScrollView>
     </SafeAreaView>
   );

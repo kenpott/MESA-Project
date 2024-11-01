@@ -10,11 +10,11 @@ export default function Tab() {
     const [isLoginFormVisible, setLoginFormVisible] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const router = useRouter(); // Use useRouter instead of useNavigation
+    const router = useRouter();
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
 
-        login(email, password);
+        await login(email, password);
         router.push('/dashboard'); // Use push for navigation
     };
 

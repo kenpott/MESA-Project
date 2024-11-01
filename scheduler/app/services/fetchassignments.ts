@@ -1,53 +1,86 @@
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
-import * as cheerio from 'cheerio';
+
+const domain = 'https://lms.lausd.net';
 
 interface Assignment {
   title: string;
-  duedate: string;
+  description: string;
   class: string;
+  type: string;
+  duedate: number; 
   overdue: number;
+  files?: string[];
+  images?: string[];
 }
 
 interface AssignmentsData {
   upcoming: Record<string, Assignment>;
-  overdue: Record<string, Assignment>;  
+  overdue: Record<string, Assignment>;
 }
 
-export async function fetchAssignments(): Promise<AssignmentsData> {
-  const cookie = await SecureStore.getItemAsync('cookie');
-  if (!cookie) {
-    throw new Error('Cookie not found in SecureStore.');
-  }
+export async function fetchAllAssignments(): Promise<AssignmentsData> {
+  const cookie = await getCookie();
 
-  const assignments: AssignmentsData = {
+  const [upcomingResponse, overdueResponse] = await Promise.all([
+    axios.get(`${domain}/home/upcoming_submissions_ajax`, { headers: { "Cookie": cookie } }),
+    axios.get(`${domain}/home/overdue_submissions_ajax`, { headers: { "Cookie": cookie } }),
+  ]);
+
+  const upcomingIds = await getAssignmentIds(upcomingResponse.data.html);
+  const overdueIds = await getAssignmentIds(overdueResponse.data.html);
+
+  const upcomingDetails = await fetchDetails(upcomingIds);
+  const overdueDetails = await fetchDetails(overdueIds);
+
+  const assignmentsData: AssignmentsData = {
     upcoming: {},
     overdue: {},
   };
 
-  const upcomingResponse = await axios.get('https://lms.lausd.net/home/upcoming_submissions_ajax', {
-    headers: {
-      "Cookie": cookie,
-    },
+  upcomingIds.forEach((id, index) => {
+    assignmentsData.upcoming[id] = upcomingDetails[index];
   });
 
-  const overdueResponse = await axios.get('https://lms.lausd.net/home/overdue_submissions_ajax', {
-    headers: {
-      "Cookie": cookie,
-    },
+  overdueIds.forEach((id, index) => {
+    assignmentsData.overdue[id] = overdueDetails[index];
   });
 
-  assignments.upcoming = await sendToParseServer(upcomingResponse.data.html, false);
-  assignments.overdue = await sendToParseServer(overdueResponse.data.html, true);
-
-  return assignments; 
+  return assignmentsData;
 }
 
-async function sendToParseServer(html: string, isOverdue: boolean): Promise<Record<string, Assignment>> {
-  const response = await axios.post('http://192.168.1.95:8000/parse', {
-    "html": html,
-    "isOverdue": isOverdue
-  });
+async function fetchDetails(ids: string[]): Promise<Assignment[]> {
+  const details: Assignment[] = [];
+  for (const id of ids) {
+    const detail = await fetchAssignmentDetails(id);
+    details.push(detail);
+  }
+  return details;
+}
+
+async function getAssignmentIds(html: string): Promise<string[]> {
+  const response = await axios.post('http://192.168.1.95:8000/getAssignmentIds', { html });
   return response.data;
 }
 
+async function fetchAssignmentDetails(id: string): Promise<Assignment> {
+  const cookie = await getCookie();
+
+  const assignmentDetailsResponse = await axios.get(`${domain}/assignment/${id}`, {
+    headers: { "Cookie": cookie },
+  });
+
+  const parsedAssignmentDetails = await axios.post('http://192.168.1.95:8000/parseAssignment', {
+    html: assignmentDetailsResponse.data,
+  });
+
+  return parsedAssignmentDetails.data;
+}
+
+async function getCookie(): Promise<string> {
+  const cookie = await SecureStore.getItemAsync('cookie');
+  if (!cookie) {
+    throw new Error('Cookie not found in SecureStore.');
+  }
+  return cookie;
+}

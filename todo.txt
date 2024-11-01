@@ -1,9 +1,23 @@
 -- TO-DO --
-So schoology is dumb umm the overdue get req returns all assignments including those that arent overdue noice.
+fetchassignment for description, files, duedate
+add link for assingment?
 dropdown menu for all assignments
+    include 
+    description
+    duedate plus time
+    link?
+    currency gain (calculated by type * x)
+
 
 -- Iterations --
 changed from directly sending cookie to login and parse html to storing their cookie on securestore and sending only the html to parse
 changed from using the api to login in into cookie login
 remove the week bar due to redundency (Design)
+added expandable info 
 added a dropdown menu for all assignments for more info (QOL) -- WIP
+Allow for differnet domains -- WIP/
+
+notes
+
+10/27 changed work flow for getting assingment data. planning to remove the redundency of parsing data from the ajax link and simply parsing the assignment html (/assignment/id) 
+directly.
