@@ -1,17 +1,78 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+import axios from 'axios';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('upcoming');
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  const [showDropdown, setShowDropdown] = useState<string | null>(null); // Store the id or index of the assignment with the visible dropdown
+  const [showDropdown, setShowDropdown] = useState<string | null>(null);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      const cookie = await SecureStore.getItemAsync("cookie");
+
+      if (!cookie) {
+        setError('No cookie found. Please login again.');
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const response = await axios.get('http://192.168.1.95:8000/get-assignments', {
+          headers: {
+            Authorization: `Bearer ${cookie}`,
+          },
+        });
+        if (response.status === 200) {
+          setAssignments(response.data);
+        } else {
+          setError('Failed to load assignments.');
+        }
+      } catch (err) {
+        setError('An error occurred while fetching assignments.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAssignments();
+  }, []);
 
   const toggleDropdown = (assignmentId: string) => {
-    // Toggle visibility of the dropdown for a specific assignment
     setShowDropdown(showDropdown === assignmentId ? null : assignmentId);
   };
 
-  // Helper function to return the color for assignment status
+  const renderItem = ({ item }: { item: any }) => (
+    <View style={styles.assignmentCard} key={item.id}>
+      <View style={styles.assignmentHeader}>
+        <Text style={styles.assignmentTitle}>{item.title}</Text>
+        <Text style={[styles.assignmentStatus, getStatusColor(item.status)]}>
+          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+        </Text>
+      </View>
+      <Text style={styles.assignmentDate}>Due Date: {item.dueDate}</Text>
+      <Pressable onPress={() => toggleDropdown(item.id)} style={styles.dropdownButton}>
+        <Text style={styles.dropdownText}>Show Details</Text>
+      </Pressable>
+      {showDropdown === item.id && (
+        <View style={styles.dropdown}>
+          <Text style={styles.assignmentDescription}>{item.description}</Text>
+          <View style={styles.extraInfo}>
+            <Text style={styles.extraInfoText}>Instructions: {item.instructions}</Text>
+            <Text style={styles.extraInfoText}>Attachment: [Download PDF]</Text>
+            <Text style={styles.extraInfoText}>Link: [Click here for resources]</Text>
+          </View>
+          <View style={styles.assignmentFooter}>
+            <Text style={styles.assignmentCurrency}>+{item.coins} Coins</Text>
+            <Text style={styles.assignmentExp}>+{item.exp} EXP</Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'overdue':
@@ -89,7 +150,6 @@ export default function Dashboard() {
             <Text style={[styles.assignmentStatus, getStatusColor('upcoming')]}>Upcoming</Text>
           </View>
           <Text style={styles.assignmentDate}>Due Date: 12/15/2024</Text>
-          <Text style={styles.assignmentPoints}>Points: 50</Text>
           <Pressable onPress={() => toggleDropdown('math')} style={styles.dropdownButton}>
             <Text style={styles.dropdownText}>Show Details</Text>
           </Pressable>
@@ -115,7 +175,6 @@ export default function Dashboard() {
             <Text style={[styles.assignmentStatus, getStatusColor('overdue')]}>Overdue</Text>
           </View>
           <Text style={styles.assignmentDate}>Due Date: 12/05/2024</Text>
-          <Text style={styles.assignmentPoints}>Points: 100</Text>
           <Pressable onPress={() => toggleDropdown('science')} style={styles.dropdownButton}>
             <Text style={styles.dropdownText}>Show Details</Text>
           </Pressable>
@@ -244,11 +303,6 @@ const styles = StyleSheet.create({
   },
   assignmentDate: {
     color: '#737373',
-    marginTop: 5,
-  },
-  assignmentPoints: {
-    color: '#B0B0B0',
-    fontWeight: 'bold',
     marginTop: 5,
   },
   assignmentFooter: {
