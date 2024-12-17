@@ -2,89 +2,93 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
+import AssignmentCard from '../../components/AssignmentCard';
+
+interface Assignment {
+  id: number;
+  title: string;
+  class: string;
+  description: string;
+  dueDate: string;
+  files?: string[];
+  links?: string[];
+  status: 'upcoming' | 'overdue' | 'completed';
+  coins: number;
+  exp: number;
+  type: string;
+}
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'overdue'>('upcoming');
   const [hoveredTab, setHoveredTab] = useState<string | null>(null);
-  const [showDropdown, setShowDropdown] = useState<string | null>(null);
-  const [assignments, setAssignments] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState<number | null>(null);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const fetchAssignments = async () => {
-      const cookie = await SecureStore.getItemAsync("cookie");
-
+      const cookie = await SecureStore.getItemAsync('cookie');
+  
       if (!cookie) {
         setError('No cookie found. Please login again.');
         setIsLoading(false);
         return;
       }
+  
       try {
-        const response = await axios.get('http://192.168.1.95:8000/get-assignments', {
-          headers: {
-            Authorization: `Bearer ${cookie}`,
-          },
-        });
+        const response = await axios.post('http://192.168.1.95:8000/getAssignments', { cookie });
+        
         if (response.status === 200) {
-          setAssignments(response.data);
+          const data = response.data;
+  
+          if (data.overdue && data.upcoming) {
+            const mapAssignments = (assignmentsData: any, status: 'upcoming' | 'overdue') =>
+              Object.entries(assignmentsData).map(([id, assignment]: [string, any]) => ({
+                ...assignment,
+                id,
+                status,
+                dueDate: new Date(assignment.duedate * 1000).toLocaleString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                  year: '2-digit',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                }).replace(',', '')
+              }));
+  
+            const combinedAssignments = [
+              ...mapAssignments(data.overdue, 'overdue'),
+              ...mapAssignments(data.upcoming, 'upcoming'),
+            ];
+  
+            setAssignments(combinedAssignments);
+          } else {
+            setError('Assignments data is not in the correct format.');
+          }
         } else {
           setError('Failed to load assignments.');
         }
       } catch (err) {
         setError('An error occurred while fetching assignments.');
+        console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
+  
     fetchAssignments();
-  }, []);
-
-  const toggleDropdown = (assignmentId: string) => {
+  }, []);  
+  
+  const toggleDropdown = (assignmentId: number) => {
     setShowDropdown(showDropdown === assignmentId ? null : assignmentId);
   };
 
-  const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.assignmentCard} key={item.id}>
-      <View style={styles.assignmentHeader}>
-        <Text style={styles.assignmentTitle}>{item.title}</Text>
-        <Text style={[styles.assignmentStatus, getStatusColor(item.status)]}>
-          {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-        </Text>
-      </View>
-      <Text style={styles.assignmentDate}>Due Date: {item.dueDate}</Text>
-      <Pressable onPress={() => toggleDropdown(item.id)} style={styles.dropdownButton}>
-        <Text style={styles.dropdownText}>Show Details</Text>
-      </Pressable>
-      {showDropdown === item.id && (
-        <View style={styles.dropdown}>
-          <Text style={styles.assignmentDescription}>{item.description}</Text>
-          <View style={styles.extraInfo}>
-            <Text style={styles.extraInfoText}>Instructions: {item.instructions}</Text>
-            <Text style={styles.extraInfoText}>Attachment: [Download PDF]</Text>
-            <Text style={styles.extraInfoText}>Link: [Click here for resources]</Text>
-          </View>
-          <View style={styles.assignmentFooter}>
-            <Text style={styles.assignmentCurrency}>+{item.coins} Coins</Text>
-            <Text style={styles.assignmentExp}>+{item.exp} EXP</Text>
-          </View>
-        </View>
-      )}
-    </View>
+  const filteredAssignments = assignments.filter(
+    (assignment) => assignment.status === activeTab
   );
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'overdue':
-        return styles.overdueStatus;
-      case 'completed':
-        return styles.completedStatus;
-      case 'upcoming':
-        return styles.upcomingStatus;
-      default:
-        return styles.upcomingStatus;
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -94,105 +98,51 @@ export default function Dashboard() {
         <Text style={styles.title}>Dashboard</Text>
         <Text style={styles.subtitle}>Your Assignments</Text>
         <View style={styles.assignmentTypeCard}>
-          <Pressable
-            onPress={() => setActiveTab('upcoming')}
-            onPressIn={() => setHoveredTab('upcoming')}
-            onPressOut={() => setHoveredTab(null)}
-            style={[
-              styles.assignmentTypeButton,
-              activeTab === 'upcoming'
-                ? styles.activeTab
-                : hoveredTab === 'upcoming'
-                ? styles.hoveredTab
-                : styles.inactiveTab,
-            ]}
-          >
-            <Text
+          {['upcoming', 'overdue'].map((tab) => (
+            <Pressable
+              key={tab}
+              onPress={() => setActiveTab(tab as 'upcoming' | 'overdue')}
+              onPressIn={() => setHoveredTab(tab)}
+              onPressOut={() => setHoveredTab(null)}
               style={[
-                styles.tabText,
-                activeTab === 'upcoming' ? styles.activeText : styles.inactiveText,
+                styles.assignmentTypeButton,
+                activeTab === tab
+                  ? styles.activeTab
+                  : hoveredTab === tab
+                  ? styles.hoveredTab
+                  : styles.inactiveTab,
               ]}
             >
-              Upcoming
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setActiveTab('overdue')}
-            onPressIn={() => setHoveredTab('overdue')}
-            onPressOut={() => setHoveredTab(null)}
-            style={[
-              styles.assignmentTypeButton,
-              activeTab === 'overdue'
-                ? styles.activeTab
-                : hoveredTab === 'overdue'
-                ? styles.hoveredTab
-                : styles.inactiveTab,
-            ]}
-          >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === 'overdue' ? styles.activeText : styles.inactiveText,
-              ]}
-            >
-              Overdue
-            </Text>
-          </Pressable>
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === tab ? styles.activeText : styles.inactiveText,
+                ]}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       </View>
 
-      {/* ScrollView for assignments */}
       <ScrollView style={styles.assignmentList}>
-        {/* Sample Assignment Card */}
-        <View style={styles.assignmentCard}>
-          <View style={styles.assignmentHeader}>
-            <Text style={styles.assignmentTitle}>Math Assignment</Text>
-            <Text style={[styles.assignmentStatus, getStatusColor('upcoming')]}>Upcoming</Text>
-          </View>
-          <Text style={styles.assignmentDate}>Due Date: 12/15/2024</Text>
-          <Pressable onPress={() => toggleDropdown('math')} style={styles.dropdownButton}>
-            <Text style={styles.dropdownText}>Show Details</Text>
-          </Pressable>
-          {showDropdown === 'math' && (
-            <View style={styles.dropdown}>
-              <Text style={styles.assignmentDescription}>This is a math assignment focused on algebra. It involves solving equations and inequalities.</Text>
-              <View style={styles.extraInfo}>
-                <Text style={styles.extraInfoText}>Instructions: Please complete the exercises in the textbook and submit your answers online.</Text>
-                <Text style={styles.extraInfoText}>Attachment: [Download PDF]</Text>
-                <Text style={styles.extraInfoText}>Link: [Click here for resources]</Text>
-              </View>
-              <View style={styles.assignmentFooter}>
-                <Text style={styles.assignmentCurrency}>+10 Coins</Text>
-                <Text style={styles.assignmentExp}>+0.1 EXP</Text>
-              </View>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.assignmentCard}>
-          <View style={styles.assignmentHeader}>
-            <Text style={styles.assignmentTitle}>Science Project</Text>
-            <Text style={[styles.assignmentStatus, getStatusColor('overdue')]}>Overdue</Text>
-          </View>
-          <Text style={styles.assignmentDate}>Due Date: 12/05/2024</Text>
-          <Pressable onPress={() => toggleDropdown('science')} style={styles.dropdownButton}>
-            <Text style={styles.dropdownText}>Show Details</Text>
-          </Pressable>
-          {showDropdown === 'science' && (
-            <View style={styles.dropdown}>
-              <Text style={styles.assignmentDescription}>This is a science project focused on environmental studies. It requires research on renewable energy sources.</Text>
-              <View style={styles.extraInfo}>
-                <Text style={styles.extraInfoText}>Instructions: Research and create a report on solar energy.</Text>
-                <Text style={styles.extraInfoText}>Attachment: [Download Project Guidelines]</Text>
-                <Text style={styles.extraInfoText}>Link: [Click here for resources]</Text>
-              </View>
-              <View style={styles.assignmentFooter}>
-                <Text style={styles.assignmentCurrency}>+20 Coins</Text>
-                <Text style={styles.assignmentExp}>+0.2 EXP</Text>
-              </View>
-            </View>
-          )}
-        </View>
+        {isLoading ? (
+          <Text style={styles.messageText}>Loading...</Text>
+        ) : error ? (
+          <Text style={styles.messageText}>{error}</Text>
+        ) : filteredAssignments.length === 0 ? (
+          <Text style={styles.messageText}>No assignments found.</Text>
+        ) : (
+          filteredAssignments.map((assignment) => (
+            <AssignmentCard
+              key={assignment.id}
+              assignment={assignment}
+              showDropdown={showDropdown}
+              toggleDropdown={toggleDropdown}
+            />
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -261,91 +211,9 @@ const styles = StyleSheet.create({
   assignmentList: {
     marginTop: 20,
   },
-  assignmentCard: {
-    backgroundColor: '#1c1c1c',
-    margin: 10,
-    marginHorizontal: 20,
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    position: 'relative',
-  },
-  assignmentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  assignmentTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  messageText: {
     color: '#ffffff',
-  },
-  assignmentStatus: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 9999,
-  },
-  overdueStatus: {
-    backgroundColor: '#e74c3c',
-  },
-  completedStatus: {
-    backgroundColor: '#2ecc71',
-  },
-  upcomingStatus: {
-    backgroundColor: '#3498db',
-  },
-  assignmentDate: {
-    color: '#737373',
-    marginTop: 5,
-  },
-  assignmentFooter: {
-    flexDirection: 'column',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-    marginTop: 15,
-  },
-  assignmentCurrency: {
-    color: '#ffd700',
-    fontWeight: 'bold',
-  },
-  assignmentExp: {
-    color: '#7e22ce',
-    fontWeight: 'bold',
-    marginTop: 5,
-  },
-  dropdownButton: {
-    marginTop: 10,
-    padding: 8,
-    backgroundColor: '#333333',
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  dropdownText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
-  },
-  dropdown: {
-    marginTop: 10,
-    backgroundColor: '#2a2a2a',
-    padding: 20,
-    borderRadius: 5,
-  },
-  assignmentDescription: {
-    color: '#ffffff',
-    marginBottom: 15,
-  },
-  extraInfo: {
-    marginTop: 10,
-  },
-  extraInfoText: {
-    color: '#ffffff',
-    marginTop: 5,
+    textAlign: 'center',
+    marginTop: 20,
   },
 });

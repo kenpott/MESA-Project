@@ -13,39 +13,27 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChecked, setIsChecked] = useState(false); 
-  const [testingMode, setTestingMode] = useState(true);  // <-- Add testingMode state
   const router = useRouter();
 
-  // Check for the cookie when the component mounts
   useEffect(() => {
     const checkCookie = async () => {
-      if (testingMode) {
-        // If in testing mode, skip login logic and go to dashboard directly
-        router.push('/(tabs)/dashboard');
-        return;
-      }
-
       const cookie = await SecureStore.getItemAsync('cookie');
       if (cookie) {
-        // Verify if the cookie is valid by making a request
         const isCookieValid = await verifyCookie(cookie);
         if (isCookieValid) {
           router.push('/(tabs)/dashboard');
         } else {
-          // If cookie is invalid, clear it and try logging in using saved credentials
           await SecureStore.deleteItemAsync('cookie');
           attemptSavedLogin();
         }
       } else {
-        // No cookie, attempt to login using saved credentials if available
         attemptSavedLogin();
       }
     };
 
-    checkCookie(); // Call the function to check if the user is already logged in
-  }, [router, testingMode]);  // <-- Include testingMode in dependencies
+    checkCookie();
+  }, [router]);
 
-  // Function to verify if the cookie is still valid
   const verifyCookie = async (cookie: string) => {
     try {
       const response = await axios.get('http://192.168.1.95:8000/verify-cookie', {
@@ -53,9 +41,9 @@ export default function Login() {
           Cookie: cookie,
         },
       });
-      return response.status === 200; // Cookie is valid if server responds correctly
+      return response.status === 200;
     } catch (error) {
-      return false; // If there's an error or the server responds incorrectly, cookie is invalid
+      return false;
     }
   };
 
@@ -71,12 +59,10 @@ export default function Login() {
       const { name, value } = response.data;
       
       if (name && value) {
-        // Save cookie value
         await SecureStore.setItemAsync('cookie', `${name}=${value}`);
         console.log(`Cookie Name: ${name}, Value: ${value}`);
 
         if (isChecked) {
-          // Save email and password if "Remember Me" is checked
           await SecureStore.setItemAsync('email', emailToLogin);
           await SecureStore.setItemAsync('password', passwordToLogin);
         }
@@ -92,14 +78,13 @@ export default function Login() {
     }
   };
 
-  // Attempt to log in using saved credentials if cookie doesn't work
   const attemptSavedLogin = async () => {
     const savedEmail = await SecureStore.getItemAsync('email');
     const savedPassword = await SecureStore.getItemAsync('password');
     if (savedEmail && savedPassword) {
-      handleLogin(savedEmail, savedPassword); // Automatically try login with saved credentials
+      handleLogin(savedEmail, savedPassword);
     } else {
-      setLoginFormVisible(true); // Show login form if no saved credentials
+      setLoginFormVisible(true); 
     }
   };
 
@@ -164,16 +149,6 @@ export default function Login() {
             <Text style={styles.buttonText}>Login with Schoology</Text>
           </Pressable>
         )}
-
-        {/* Debugging - toggle testing mode */}
-        <Pressable
-          style={styles.button}
-          onPress={() => setTestingMode(!testingMode)}
-        >
-          <Text style={styles.buttonText}>
-            {testingMode ? 'Disable Testing Mode' : 'Enable Testing Mode'}
-          </Text>
-        </Pressable>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
@@ -234,11 +209,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: '#6b21a8',
-  },
-  schoologyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   buttonText: {
     color: '#171717',
