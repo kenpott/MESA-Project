@@ -13,26 +13,31 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChecked, setIsChecked] = useState(false); 
+  const [isAutoLoginEnabled, setIsAutoLoginEnabled] = useState(false); // new state to control auto login
   const router = useRouter();
 
   useEffect(() => {
-    const checkCookie = async () => {
-      const cookie = await SecureStore.getItemAsync('cookie');
-      if (cookie) {
-        const isCookieValid = await verifyCookie(cookie);
-        if (isCookieValid) {
-          router.push('/(tabs)/dashboard');
-        } else {
-          await SecureStore.deleteItemAsync('cookie');
-          attemptSavedLogin();
-        }
+    if (isAutoLoginEnabled) {
+      checkAndLoginAutomatically();
+    } else {
+      setLoginFormVisible(true); // Show the login form if auto-login is not enabled
+    }
+  }, [isAutoLoginEnabled, router]);
+
+  const checkAndLoginAutomatically = async () => {
+    const cookie = await SecureStore.getItemAsync('cookie');
+    if (cookie) {
+      const isCookieValid = await verifyCookie(cookie);
+      if (isCookieValid) {
+        router.push('/(tabs)/dashboard');
       } else {
+        await SecureStore.deleteItemAsync('cookie');
         attemptSavedLogin();
       }
-    };
-
-    checkCookie();
-  }, [router]);
+    } else {
+      attemptSavedLogin();
+    }
+  };
 
   const verifyCookie = async (cookie: string) => {
     try {
