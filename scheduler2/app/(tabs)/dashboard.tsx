@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Pressable, ScrollView, Modal } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import AssignmentCard from '../../components/AssignmentCard';
+import Entypo from '@expo/vector-icons/Entypo';
 
 interface Assignment {
   id: number;
@@ -25,23 +26,34 @@ export default function Dashboard() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [questProgress, setQuestProgress] = useState<{ [key: number]: number }>({
+    1: 0,
+    2: 0,
+    3: 0,
+  });
+
+  const testQuests = [
+    { id: 1, description: 'Complete 3 assignments', progress: questProgress[1], goal: 3 },
+    { id: 2, description: 'Complete 5 overdue assignments', progress: questProgress[2], goal: 5 },
+    { id: 3, description: 'Complete 1 assignment from each class', progress: questProgress[3], goal: 3 },
+  ];
 
   useEffect(() => {
     const fetchAssignments = async () => {
       const cookie = await SecureStore.getItemAsync('cookie');
-  
+
       if (!cookie) {
         setError('No cookie found. Please login again.');
         setIsLoading(false);
         return;
       }
-  
+
       try {
         const response = await axios.post('http://192.168.1.95:8000/getAssignments', { cookie });
-        
         if (response.status === 200) {
           const data = response.data;
-  
+
           if (data.overdue && data.upcoming) {
             const mapAssignments = (assignmentsData: any, status: 'upcoming' | 'overdue') =>
               Object.entries(assignmentsData).map(([id, assignment]: [string, any]) => ({
@@ -58,12 +70,12 @@ export default function Dashboard() {
                   hour12: true,
                 }).replace(',', '')
               }));
-  
+
             const combinedAssignments = [
               ...mapAssignments(data.overdue, 'overdue'),
               ...mapAssignments(data.upcoming, 'upcoming'),
             ];
-  
+
             setAssignments(combinedAssignments);
           } else {
             setError('Assignments data is not in the correct format.');
@@ -78,10 +90,10 @@ export default function Dashboard() {
         setIsLoading(false);
       }
     };
-  
+
     fetchAssignments();
   }, []);  
-  
+
   const toggleDropdown = (assignmentId: number) => {
     setShowDropdown(showDropdown === assignmentId ? null : assignmentId);
   };
@@ -94,7 +106,18 @@ export default function Dashboard() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.welcome}>Welcome!</Text>
-        <Text style={styles.username}>Username</Text>
+        
+        <View style={styles.headerRow}>
+          <Text style={styles.username}>Username</Text>
+          
+          <Pressable
+            style={styles.modalButton}
+            onPress={() => setModalVisible(true)}
+          >
+            <Entypo name="dots-three-horizontal" size={24} color="white" />
+          </Pressable>
+        </View>
+
         <Text style={styles.title}>Dashboard</Text>
         <Text style={styles.subtitle}>Your Assignments</Text>
         <View style={styles.assignmentTypeCard}>
@@ -125,6 +148,32 @@ export default function Dashboard() {
           ))}
         </View>
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Quests</Text>
+            <ScrollView style={styles.questList}>
+              {testQuests.map((quest) => (
+                <View key={quest.id} style={styles.questItem}>
+                  <Text style={styles.questDescription}>{quest.description}</Text>
+                  <Text style={styles.questProgress}>
+                    Progress: {quest.progress}/{quest.goal}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+            <Pressable onPress={() => setModalVisible(false)} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
 
       <ScrollView style={styles.assignmentList}>
         {isLoading ? (
@@ -161,6 +210,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#737373',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   username: {
     fontSize: 24,
@@ -215,5 +269,60 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'center',
     marginTop: 20,
+  },
+  modalButton: {
+    padding: 10,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    backgroundColor: '#111111',
+    padding: 20,
+    borderRadius: 10,
+    width: 300,
+    height: 400, 
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  questList: {
+    flex: 1,
+    marginTop: 10,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    alignSelf: 'flex-start',
+    color: '#ffffff',
+  },
+  closeButton: {
+    backgroundColor: '#7e22ce',
+    padding: 10,
+    borderRadius: 5,
+    width: '100%',
+    position: 'absolute',
+    bottom: 20,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  questItem: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  questDescription: {
+    color: '#ffffff',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  questProgress: {
+    color: '#737373',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });

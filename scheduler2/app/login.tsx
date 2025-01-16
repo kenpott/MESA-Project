@@ -13,14 +13,14 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isChecked, setIsChecked] = useState(false); 
-  const [isAutoLoginEnabled, setIsAutoLoginEnabled] = useState(false); // new state to control auto login
+  const [isAutoLoginEnabled, setIsAutoLoginEnabled] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     if (isAutoLoginEnabled) {
       checkAndLoginAutomatically();
     } else {
-      setLoginFormVisible(true); // Show the login form if auto-login is not enabled
+      setLoginFormVisible(true);
     }
   }, [isAutoLoginEnabled, router]);
 

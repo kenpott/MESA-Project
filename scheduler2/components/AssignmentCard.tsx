@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     color: '#22c55e',
   },
   upcomingStatus: {
-    color: '#Afeeee',
+    color: '#f59e0b',
   },
   defaultStatus: {
     color: '#a1a1a1',
@@ -196,6 +196,7 @@ const styles = StyleSheet.create({
   assignmentDescription: {
     fontSize: 14,
     color: '#ffffff',
+    marginTop: 15,
     marginBottom: 10,
   },
   sectionContainer: {
