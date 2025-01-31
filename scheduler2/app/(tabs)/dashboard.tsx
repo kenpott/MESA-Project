@@ -5,6 +5,8 @@ import axios from 'axios';
 import AssignmentCard from '../../components/AssignmentCard';
 import Entypo from '@expo/vector-icons/Entypo';
 
+const ip = '192.168.1.95:8000';
+
 interface Assignment {
   id: number;
   title: string;
@@ -50,7 +52,7 @@ export default function Dashboard() {
       }
 
       try {
-        const response = await axios.post('http://192.168.1.95:8000/getAssignments', { cookie });
+        const response = await axios.post(`http://${ip}/getAssignments`, { cookie });
         if (response.status === 200) {
           const data = response.data;
 

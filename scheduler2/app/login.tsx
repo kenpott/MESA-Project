@@ -6,6 +6,8 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import Checkbox from 'expo-checkbox';
 
+const ip = '192.168.1.95:8000';
+
 export default function Login() {
   const [isLoginFormVisible, setLoginFormVisible] = useState(false);
   const [email, setEmail] = useState('');
@@ -41,7 +43,7 @@ export default function Login() {
 
   const verifyCookie = async (cookie: string) => {
     try {
-      const response = await axios.get('http://192.168.1.95:8000/verify-cookie', {
+      const response = await axios.get(`http://${ip}/verify-cookie`, {
         headers: {
           Cookie: cookie,
         },
@@ -57,7 +59,7 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post('http://192.168.1.95:8000/login', {
+      const response = await axios.post(`http://${ip}/login`, {
         email: emailToLogin,
         password: passwordToLogin,
       });
